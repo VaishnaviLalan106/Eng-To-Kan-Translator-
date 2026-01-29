@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Kannada Translator Dashboard</title>
+
+    <style>
+      body {
+        margin: 0;
+        font-family: "Segoe UI", sans-serif;
+        background: linear-gradient(120deg, #383c49, #715b87);
+        min-height: 100vh;
+      }
+
+      header {
+        padding: 20px;
+        text-align: center;
+        font-size: 26px;
+        color: white;
+        font-weight: bold;
+      }
+
+      .dashboard {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr;
+        gap: 20px;
+        padding: 20px;
+      }
+
+      .card {
+        background: white;
+        border-radius: 18px;
+        padding: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+      }
+
+      textarea {
+        width: 100%;
+        height: 120px;
+        padding: 7px;
+        border-radius: 12px;
+        border: 1px solid #ccc;
+        resize: none;
+      }
+
+      button {
+        padding: 10px;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        color: white;
+      }
+
+      .btn-row {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .translate {
+        background: #48bb78;
+      }
+      .mic {
+        background: #4299e1;
+      }
+      .clear {
+        background: #f56565;
+      }
+      .copy {
+        background: #ed8936;
+      }
+      .speak {
+        background: #805ad5;
+      }
+
+      .output {
+        background: #f4f6ff;
+        padding: 15px;
+        border-radius: 12px;
+        margin-top: 15px;
+        min-height: 60px;
+      }
+
+      .history-item {
+        background: #edf2f7;
+        padding: 10px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        font-size: 14px;
+      }
+
+      footer {
+        text-align: center;
+        padding: 15px;
+        color: white;
+        opacity: 0.8;
+      }
+    </style>
+  </head>
+  <body>
+    <header>🌐 English → Kannada Translator Dashboard</header>
+
+    <div class="dashboard">
+      <!-- Translator -->
+      <div class="card">
+        <h3>📝 Translate</h3>
+        <form method="POST">
+          <textarea
+            id="english"
+            name="english_text"
+            placeholder="Type or speak English text..."
+          >
+{{ input_text }}</textarea
+          >
+
+          <div class="btn-row">
+            <button class="translate" type="submit">🔄 Translate</button>
+            <button class="mic" type="button" onclick="startSpeech()">
+              🎤 Speak
+            </button>
+            <button class="clear" type="button" onclick="clearText()">
+              🧹 Clear
+            </button>
+          </div>
+        </form>
+
+        {% if translated_text %}
+        <div class="output" id="output">{{ translated_text }}</div>
+        <div class="btn-row" style="margin-top: 10px">
+          <button class="copy" onclick="copyText()">📋 Copy</button>
+          <button class="speak" onclick="speakKannada()">
+            🔊 Speak Kannada
+          </button>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- History -->
+      <div class="card">
+        <h3>🕘 History</h3>
+        {% for item in history %}
+        <div class="history-item">
+          <strong>EN:</strong> {{ item.english }}<br />
+          <strong>KN:</strong> {{ item.kannada }}
+        </div>
+        {% else %}
+        <p>No history yet</p>
+        {% endfor %}
+      </div>
+
+      <!-- Info -->
+      <div class="card">
+        <h3>📊 Dashboard</h3>
+        <p>🎙️ Voice Input Enabled</p>
+        <p>🔊 Kannada Speech Output</p>
+        <p>🕘 Translation History</p>
+        <p>📚 Helpful for learning Kannada</p>
+        <p>⚡ Fast & Simple</p>
+      </div>
+    </div>
+
+    <footer>Built with ❤️ using Python, Flask & AI</footer>
+
+    <script>
+      function startSpeech() {
+        if (!("webkitSpeechRecognition" in window)) {
+          alert("Speech recognition not supported");
+          return;
+        }
+        const rec = new webkitSpeechRecognition();
+        rec.lang = "en-US";
+        rec.start();
+        rec.onresult = (e) => {
+          document.getElementById("english").value = e.results[0][0].transcript;
+        };
+      }
+      window.speechSynthesis.onvoiceschanged = () => {};
+      function speakKannada() {
+        const text = document.getElementById("output").innerText;
+
+        if (!text) {
+          alert("No Kannada text to speak");
+          return;
+        }
+
+        const synth = window.speechSynthesis;
+        const utterance = new SpeechSynthesisUtterance(text);
+
+        let voices = synth.getVoices();
+
+        // Try to find Kannada voice
+        let kannadaVoice = voices.find(
+          (v) => v.lang === "kn-IN" || v.lang.startsWith("kn"),
+        );
+
+        if (!kannadaVoice) {
+          alert(
+            "Kannada voice not available on this system 😕\n\nPlease install Indian language voices in Windows settings.",
+          );
+          return;
+        }
+
+        utterance.voice = kannadaVoice;
+        utterance.lang = kannadaVoice.lang;
+        synth.speak(utterance);
+      }
+      function copyText() {
+        navigator.clipboard.writeText(
+          document.getElementById("output").innerText,
+        );
+        alert("Copied!");
+      }
+
+      function clearText() {
+        document.getElementById("english").value = "";
+      }
+    </script>
+  </body>
+</html>
